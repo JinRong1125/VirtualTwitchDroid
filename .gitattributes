@@ -7,3 +7,10 @@
 *.task   filter=lfs diff=lfs merge=lfs -text
 *.vrm    filter=lfs diff=lfs merge=lfs -text
 *.vvm    filter=lfs diff=lfs merge=lfs -text
+
+# Bundled model/data assets must stay byte-for-byte on EVERY platform.
+# Without this, a Windows clone (git core.autocrlf=true) rewrites the line endings of the
+# plain-text `tokens.txt`, changing its bytes and sha256 so sherpa-onnx cannot load it and the
+# app reports "voice models unavailable — tokens.txt". `-text` disables all EOL conversion.
+feature/voice/src/main/assets/voice/** -text
+feature/avatar/src/main/assets/** -text
