@@ -226,8 +226,12 @@ class ZundamonVoiceController internal constructor(
         while (playQueue.tryReceive().getOrNull()?.also { it.done?.complete(Unit) } != null) Unit
         timeline.clear()
         listenPolicy.reset()
-        monitor?.stop()
+        // Release the monitor on the play thread — never here on main. The single-thread play worker may be
+        // blocked in AudioTrack.write(WRITE_BLOCKING) on this very track; freeing it from main is a native
+        // use-after-free. Posting to [playDispatcher] runs after that in-flight write completes (FIFO).
+        val monitorToRelease = monitor
         monitor = null
+        if (monitorToRelease != null) scope.launch(playDispatcher) { monitorToRelease.stop() }
         _lagSeconds.value = 0f
         _active.value = false
         if (_state.value != VoiceState.ERROR) _state.value = VoiceState.IDLE
@@ -259,8 +263,13 @@ class ZundamonVoiceController internal constructor(
     override fun attachAudioSink(sink: PcmSink) {
         this.sink = sink
         _broadcasting.value = true
-        monitor?.stop()
+        // Release the monitor on the play thread, not this caller's thread (audioSourceFor runs on a
+        // Dispatchers.Default worker): the play worker may be mid AudioTrack.write(WRITE_BLOCKING) on it,
+        // so freeing it here would be a native use-after-free. Posting to [playDispatcher] runs after
+        // that in-flight write completes (FIFO). Same reasoning as stop().
+        val monitorToRelease = monitor
         monitor = null
+        if (monitorToRelease != null) scope.launch(playDispatcher) { monitorToRelease.stop() }
         log("audio sink attached (latency ${sink.latencyMs} ms; the format is read at delivery time)")
     }
 

@@ -167,8 +167,16 @@ class AvatarStreamController @Inject constructor(
         private var lastRenderNanos = 0L
         private var camera: Camera? = null
 
+        /** This session's attach ticket; a detach or a superseding attach bumps [generation] past it. */
+        private val ticket = generation.get()
+
         private val frameCallback = object : Choreographer.FrameCallback {
             override fun doFrame(frameTimeNanos: Long) {
+                // A detach (or a superseding attach) bumps [generation] synchronously off the main thread.
+                // Stop drawing — and stop re-posting — the instant that happens, BEFORE the (main-thread)
+                // teardown runs: otherwise a frame keeps rendering into a Surface RootEncoder is reclaiming,
+                // a native use-after-free in Filament (SIGSEGV on the SurfaceTexture thread).
+                if (generation.get() != ticket) return
                 // The encoder runs at TARGET_FPS; rendering every display frame would only burn GPU/CPU.
                 if (frameTimeNanos - lastRenderNanos >= MIN_FRAME_INTERVAL_NANOS) {
                     lastRenderNanos = frameTimeNanos

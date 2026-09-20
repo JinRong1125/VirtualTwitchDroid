@@ -68,17 +68,11 @@ import java.util.EnumMap
  */
 class AvatarRenderer {
 
-    // Prefer Vulkan: on the Android emulator the Metal-backed GLES translator presents the skybox but
-    // never rasterizes gltfio's skinned + morphed meshes, while gfxstream Vulkan is complete; real
-    // devices are fine either way. Falls back to Filament's default (OpenGL) when Vulkan is unavailable —
-    // Engine.Builder.build() THROWS (IllegalStateException) rather than returning null in that case.
-    private val engine: Engine = runCatching {
-        Engine.Builder().backend(Engine.Backend.VULKAN).config(engineConfig()).build()
-    }
-        .getOrElse {
-            Log.w(TAG, "Vulkan engine unavailable, falling back to OpenGL", it)
-            Engine.Builder().config(engineConfig()).build()
-        }
+    // One process-wide Filament Engine is shared by every AvatarRenderer (the on-screen Avatar tab and the
+    // Go Live VTuber session). Creating a separate Engine per renderer meant two Vulkan Engines were built
+    // and destroyed as tabs switched, which raced in Filament's native backend and crashed (SIGSEGV on the
+    // SurfaceTexture thread). One Engine, only ever used on the main thread by both, is fully serialized.
+    private val engine: Engine = SharedFilamentEngine.acquire()
     private val renderer = engine.createRenderer()
     private val scene = engine.createScene()
     private val view = engine.createView()
@@ -551,7 +545,9 @@ class AvatarRenderer {
         engine.destroyCameraComponent(camera.entity)
         EntityManager.get().destroy(camera.entity)
         EntityManager.get().destroy(light)
-        engine.destroy()
+        // The shared Engine is deliberately NOT destroyed here: it is process-wide (SharedFilamentEngine),
+        // outlives every renderer, and is only touched on the main thread — so switching tabs never tears a
+        // Filament Engine down, which is what raced and crashed natively.
     }
 
     private fun applyRig(rig: FaceRig, frameTimeNanos: Long) {
@@ -775,3 +771,27 @@ private class FilamentBoneTransforms(
  * (cores − 1 = 8 on a Pixel 8a) leave the CPU to MediaPipe, the encoder, the Zipformer and VOICEVOX.
  */
 private fun engineConfig(): Engine.Config = Engine.Config().apply { jobSystemThreadCount = 2 }
+
+/**
+ * The one process-wide Filament [Engine], shared by every [AvatarRenderer]. Created lazily on first use —
+ * always the main thread, which is Filament's single-thread contract — and intentionally never destroyed:
+ * it lives for the process (the standard Filament pattern). This is what makes switching tabs safe; before,
+ * each renderer built and tore down its own Vulkan Engine and two of them alternating crashed natively.
+ *
+ * Prefer Vulkan: on the Android emulator the Metal-backed GLES translator presents the skybox but never
+ * rasterizes gltfio's skinned + morphed meshes, while gfxstream Vulkan is complete; real devices are fine
+ * either way. Engine.Builder.build() THROWS when the backend is unavailable, so fall back to OpenGL.
+ */
+internal object SharedFilamentEngine {
+    private var engine: Engine? = null
+
+    /** Main thread only. */
+    fun acquire(): Engine = engine ?: build().also { engine = it }
+
+    private fun build(): Engine = runCatching {
+        Engine.Builder().backend(Engine.Backend.VULKAN).config(engineConfig()).build()
+    }.getOrElse {
+        Log.w("AvatarRenderer", "Vulkan engine unavailable, falling back to OpenGL", it)
+        Engine.Builder().config(engineConfig()).build()
+    }
+}
