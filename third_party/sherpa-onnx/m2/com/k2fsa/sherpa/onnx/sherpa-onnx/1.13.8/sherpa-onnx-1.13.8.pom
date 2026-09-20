@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.k2fsa.sherpa.onnx</groupId>
+  <artifactId>sherpa-onnx</artifactId>
+  <version>1.13.8</version>
+  <packaging>aar</packaging>
+  <name>sherpa-onnx (vendored release AAR)</name>
+  <licenses><license><name>Apache-2.0</name></license></licenses>
+</project>

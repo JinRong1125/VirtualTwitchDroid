@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Speech recognition reads the microphone (the same permission Go Live already asks for). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- The models are bundled in assets/voice (no download); INTERNET stays for the broadcast (RTMP) path. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- VOICEVOX CORE's AAR declares minSdk 26; the app is 24. The feature reports `supported = false`
+         below 26 (VoiceSupport) instead of raising the whole app's minimum. -->
+    <uses-sdk tools:overrideLibrary="jp.hiroshiba.voicevoxcore" />
+</manifest>

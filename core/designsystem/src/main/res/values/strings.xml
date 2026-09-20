@@ -1,0 +1,22 @@
+<resources>
+    <string name="live">Live</string>
+    <string name="viewers">Viewers</string>
+    <string name="mute">Mute</string>
+    <string name="following">Following</string>
+    <string name="follow">Follow</string>
+    <string name="send_a_message">Send a message</string>
+    <string name="channel_points">Channel points</string>
+    <string name="emotes">Emotes</string>
+    <string name="send">Send</string>
+    <string name="more">More</string>
+    <string name="close_mini_player">Close mini player</string>
+    <string name="rewards">Rewards</string>
+    <string name="rewards_of">%1$s\'s Rewards</string>
+    <string name="multiplier">1.2X Multiplier</string>
+    <string name="reward_random_sub_emote">Unlock a Random Sub Emote</string>
+    <string name="reward_modify_emote">Modify a Single Emote</string>
+    <string name="reward_become_fan">Become a Fan</string>
+    <string name="reward_monthly_subscriber">Monthly Subscriber</string>
+    <string name="reward_become_vip">Become a VIP</string>
+    <string name="reward_super_vip">Become a super VIP</string>
+</resources>

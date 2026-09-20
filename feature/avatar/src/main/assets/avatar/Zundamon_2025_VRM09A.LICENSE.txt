@@ -1,0 +1,7 @@
+Zundamon_2025_VRM09A.vrm — ずんだもん（人型）, © SSS LLC.
+VRM 0.x (saturday06 Blender VRM exporter 3.9.1). Meta: license "Other" → https://zunko.jp/guideline.html
+(Zundamon character guideline), credit required, commercial use: Disallow, not redistributable.
+
+LOCAL TEST MODEL ONLY. Bundling it in the APK is redistribution — follow the zunko.jp guideline and swap in
+a properly-licensed model before any public/commercial or distributed build. The renderer is model-agnostic,
+so a swap is just BUNDLED_AVATAR_ASSET (render/VrmAssets.kt) + avatar_model_credit (values/strings.xml).

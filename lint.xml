@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Shared Android Lint rule config for every module (wired via the convention plugin's
+  lint.lintConfig). Real correctness / performance / security / a11y checks stay at their
+  default severities and are enforced (abortOnError = true); the entries below only downgrade
+  advisory, non-code checks that would otherwise be noise in this sample's dev loop.
+-->
+<lint>
+    <!-- "A newer version is available" — a maintenance nudge, not a code defect. -->
+    <issue id="GradleDependency" severity="informational" />
+    <issue id="AndroidGradlePluginVersion" severity="informational" />
+    <issue id="NewerVersionAvailable" severity="informational" />
+</lint>

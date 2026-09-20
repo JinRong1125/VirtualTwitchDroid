@@ -1,0 +1,31 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Misc local
+*.hprof
+.kotlin/
+
+# Claude Code / AI dev — per-developer & runtime state, never commit.
+# The shared config (.claude/commands, .claude/skills, .claude/README.md) IS committed;
+# only your own local settings and runtime locks are ignored. See .claude/README.md.
+/.claude/settings.local.json
+/.claude/scheduled_tasks.lock
+/.claude/scheduled_tasks/
+/.idea/deploymentTargetSelector.xml
+/.idea/deploymentTargetDropDown.xml
+
+# Personal files — never publish
+/resume.md

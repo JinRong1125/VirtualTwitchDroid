@@ -1,0 +1,9 @@
+# Large binary assets tracked with Git LFS (configure `git lfs install` before the first push).
+# The ReazonSpeech ASR encoder alone is ~148 MB, over GitHub's 100 MB/file limit.
+*.onnx   filter=lfs diff=lfs merge=lfs -text
+*.tgz    filter=lfs diff=lfs merge=lfs -text
+*.aar    filter=lfs diff=lfs merge=lfs -text
+*.so     filter=lfs diff=lfs merge=lfs -text
+*.task   filter=lfs diff=lfs merge=lfs -text
+*.vrm    filter=lfs diff=lfs merge=lfs -text
+*.vvm    filter=lfs diff=lfs merge=lfs -text

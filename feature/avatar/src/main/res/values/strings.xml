@@ -1,0 +1,37 @@
+<resources>
+    <string name="avatar_title">Avatar</string>
+    <string name="avatar_face_detected">Face detected</string>
+    <string name="avatar_face_none">No face in view</string>
+    <!-- %1$s fps, %2$d ms inference -->
+    <string name="avatar_stats">%1$.1f fps · %2$d ms</string>
+    <!-- head yaw / pitch / roll in degrees -->
+    <string name="avatar_head">Head yaw %1$.0f° · pitch %2$.0f° · roll %3$.0f°</string>
+    <string name="avatar_expressions">Expressions</string>
+    <string name="avatar_weight">%1$.2f</string>
+    <string name="avatar_tracker_starting">Starting face tracker…</string>
+    <!-- %1$s = delegate name (GPU / CPU) -->
+    <string name="avatar_tracker_running">Tracking on %1$s</string>
+    <string name="avatar_tracker_failed_init">Face tracking unavailable: the model could not start on this device.</string>
+    <string name="avatar_tracker_failed_runtime">Face tracking stopped: the model failed while running.</string>
+    <string name="avatar_camera_rationale">Camera access is needed to track your face for the avatar.</string>
+    <string name="avatar_grant_camera">Grant camera access</string>
+    <string name="avatar_use_back_camera">Use back camera</string>
+    <string name="avatar_use_front_camera">Use front camera</string>
+    <!-- Required credit for the bundled model (zunko.jp guideline: credit, non-commercial). -->
+    <string name="avatar_model_credit">ずんだもん © SSS LLC. · zunko.jp guideline</string>
+    <!-- Zundamon voice rehearsal card (speech → ずんだもん TTS). -->
+    <string name="voice_listen">Listen (日本語)</string>
+    <string name="voice_stop">Stop</string>
+    <string name="voice_say">Say</string>
+    <string name="voice_say_hint">ずんだもんに言わせる…</string>
+    <!-- %1$.1f = seconds of queued Zundamon audio -->
+    <string name="voice_state_idle">Voice off</string>
+    <string name="voice_state_preparing">Loading voice models…</string>
+    <string name="voice_state_listening">Listening · lag %1$.1f s</string>
+    <string name="voice_state_thinking">Recognising… · lag %1$.1f s</string>
+    <string name="voice_state_speaking">Speaking · lag %1$.1f s</string>
+    <string name="voice_state_error">Voice failed</string>
+    <string name="voice_in_use_by_go_live">In use by Go Live</string>
+    <!-- Mandatory credit for generated audio (zunko.jp terms) + the ASR model's attribution. -->
+    <string name="voice_credit">VOICEVOX:ずんだもん · ReazonSpeech k2 v2 (sherpa-onnx)</string>
+</resources>

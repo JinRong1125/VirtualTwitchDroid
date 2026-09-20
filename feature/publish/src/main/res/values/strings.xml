@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stream-key / chat-username input labels -->
+    <string name="chat_username">Chat username</string>
+    <string name="twitch_stream_key">Twitch stream key</string>
+
+    <!-- Camera overlay control content descriptions -->
+    <string name="minimize">Minimize</string>
+    <string name="video_quality">Video quality</string>
+    <string name="picture_in_picture">Picture in picture</string>
+    <string name="switch_camera">Switch camera</string>
+    <string name="vtuber_mode_on">Broadcast the avatar (VTuber mode)</string>
+    <string name="vtuber_mode_off">Broadcast the camera</string>
+    <string name="zundamon_voice_on">Speak with the Zundamon voice</string>
+    <string name="zundamon_voice_off">Broadcast your own voice</string>
+    <!-- Zundamon voice status; %1$.1f = seconds of queued Zundamon audio -->
+    <string name="voice_state_idle">Voice off</string>
+    <string name="voice_state_preparing">Loading voice models…</string>
+    <string name="voice_state_listening">Listening · lag %1$.1f s</string>
+    <string name="voice_state_thinking">Recognising… · lag %1$.1f s</string>
+    <string name="voice_state_speaking">Speaking · lag %1$.1f s</string>
+    <string name="voice_state_error">Voice failed</string>
+    <!-- Mandatory credit for generated audio (zunko.jp terms) + the ASR model's attribution. -->
+    <string name="voice_credit">VOICEVOX:ずんだもん · ReazonSpeech k2 v2 (sherpa-onnx)</string>
+    <string name="mute_microphone">Mute microphone</string>
+    <string name="unmute_microphone">Unmute microphone</string>
+
+    <!-- Quality bottom sheet -->
+    <string name="camera_quality">Camera quality</string>
+    <string name="quality_1080">1080p</string>
+    <string name="quality_720">720p</string>
+    <string name="quality_480">480p</string>
+    <string name="quality_360">360p</string>
+
+    <!-- Permission prompt -->
+    <string name="permission_rationale">Camera and microphone access is needed to go live.</string>
+    <string name="grant_access">Grant access</string>
+
+    <!-- Camera error state -->
+    <string name="retry">Retry</string>
+
+    <!-- Broadcast button states -->
+    <string name="reconnecting">Reconnecting…</string>
+    <string name="connecting">Connecting…</string>
+    <string name="go_backstage">Go Backstage</string>
+    <string name="go_live">Go Live</string>
+
+    <!-- Floating mini-player -->
+    <string name="youre_live">You\'re live</string>
+    <string name="camera">Camera</string>
+    <string name="live">LIVE</string>
+
+    <!-- Broadcast error messages -->
+    <string name="camera_error">Couldn\'t open the camera.</string>
+    <string name="enter_stream_key">Enter your Twitch stream key first.</string>
+    <string name="connect_error">Couldn\'t connect to Twitch.</string>
+    <string name="key_rejected">Twitch rejected the stream key.</string>
+    <string name="lost_connection">Lost connection to Twitch. Try again.</string>
+</resources>

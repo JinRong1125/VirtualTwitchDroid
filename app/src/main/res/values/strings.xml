@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">VirtualTwitchDroid</string>
+    <string name="nav_games">Games</string>
+    <string name="nav_popular">Popular</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_go_live">Go Live</string>
+    <string name="nav_avatar">Avatar</string>
+</resources>
