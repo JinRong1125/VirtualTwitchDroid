@@ -1,7 +1,9 @@
 package com.example.virtualtwitchdroid.feature.avatar
 
 import android.Manifest
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -20,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +51,18 @@ import com.example.virtualtwitchdroid.feature.avatar.tracking.TrackerStatus
 @Composable
 internal fun AvatarScreen(modifier: Modifier = Modifier, viewModel: AvatarViewModel = hiltViewModel()) {
     val context = LocalContext.current
+    // Lock the Avatar tab to portrait (like the Go Live tab): the avatar renders upright and face
+    // tracking is tuned for portrait, so landscape is prohibited. Restore the prior orientation on leave.
+    val activity = LocalActivity.current
+    DisposableEffect(Unit) {
+        val previousOrientation = activity?.requestedOrientation
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        onDispose {
+            if (activity != null && previousOrientation != null) {
+                activity.requestedOrientation = previousOrientation
+            }
+        }
+    }
     var hasCamera by remember {
         mutableStateOf(context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
     }
