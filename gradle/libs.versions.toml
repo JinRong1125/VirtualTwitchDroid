@@ -23,7 +23,7 @@ composeBom = "2026.09.00"
 media3 = "1.11.1"
 okhttp = "5.5.0"
 retrofit = "3.0.0"
-coil = "3.2.0"
+coil = "3.6.3"
 rootencoder = "2.8.1"
 
 # VTuber avatar (face tracking). tasks-vision 1.0.0 exists (2026-07) but its API is unverified here;
