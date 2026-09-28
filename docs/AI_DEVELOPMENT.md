@@ -5,7 +5,7 @@ pipeline, quality is enforced on the developer's own machine by a deterministic 
 verification on a real Android device driven by [**ARTEMIS**](https://github.com/google/artemis), an autonomous mobile UI agent that
 Claude Code controls over MCP.
 
-- **Project home:** <https://github.com/JinRong1125/VitrualTwitchDroid>
+- **Project home:** <https://github.com/JinRong1125/VirtualTwitchDroid>
 - **The playbook:** [`../scripts/ai-controller.md`](../scripts/ai-controller.md)
 - **The scripts:** [`../scripts/README.md`](../scripts/README.md)
 - **The device journeys:** [`../scripts/artemis-journeys.md`](../scripts/artemis-journeys.md)
@@ -93,7 +93,7 @@ investigated and documented. The `/runtime-scan` command runs both bridges at on
 
 The loop is self-contained in a clone — there is nothing external to configure:
 
-1. Clone <https://github.com/JinRong1125/VitrualTwitchDroid> with **Git LFS** (large model binaries
+1. Clone <https://github.com/JinRong1125/VirtualTwitchDroid> with **Git LFS** (large model binaries
    are bundled) and open it in Android Studio (**JDK 25** / the Android Studio JBR).
 2. Connect an authorized Android device (a Pixel 8a is the reference) or start an emulator.
 3. Run `scripts/ai-dev-loop.sh` to gate, then drive an ARTEMIS journey to verify. No account, key,

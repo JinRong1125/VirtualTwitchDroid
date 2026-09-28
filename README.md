@@ -149,7 +149,7 @@ screenshots above were captured through that loop on a Pixel 8a.
   commands, the skills, and how to set up the loop on a fresh clone.
 - **Scripts & how to run them** — [`scripts/README.md`](scripts/README.md).
 - **The full process guide (how it combines with ARTEMIS)** — [`docs/AI_DEVELOPMENT.md`](docs/AI_DEVELOPMENT.md).
-- **Project home** — <https://github.com/JinRong1125/VitrualTwitchDroid>.
+- **Project home** — <https://github.com/JinRong1125/VirtualTwitchDroid>.
 
 There is no CI in this project: the device-backed gate plus the ARTEMIS journeys in
 [`scripts/artemis-journeys.md`](scripts/artemis-journeys.md) are the quality bar. A fresh clone
@@ -194,7 +194,7 @@ voice features. Full licenses and attributions are in **[LICENSES.md](LICENSES.m
 - [yeemachine/kalidokit](https://github.com/yeemachine/kalidokit) · [ButzYung/SystemAnimatorOnline](https://github.com/ButzYung/SystemAnimatorOnline) — face-tracking-to-rig references.
 - [Open-LLM-VTuber/Open-LLM-VTuber](https://github.com/Open-LLM-VTuber/Open-LLM-VTuber) · [notvalproate/zundamon-vc](https://github.com/notvalproate/zundamon-vc) — VTuber / Zundamon voice-changer references.
 
-**Project home** — [JinRong1125/VitrualTwitchDroid](https://github.com/JinRong1125/VitrualTwitchDroid).
+**Project home** — [JinRong1125/VirtualTwitchDroid](https://github.com/JinRong1125/VirtualTwitchDroid).
 
 ## License
 
