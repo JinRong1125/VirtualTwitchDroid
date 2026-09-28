@@ -145,4 +145,53 @@ class RotationMathTest {
         assertTrue(out contentEquals m)
         assertTrue(out !== m)
     }
+
+    private val scratchPoses = listOf(
+        HeadPose.IDENTITY,
+        HeadPose(30f, 0f, 0f),
+        HeadPose(0f, -15f, 0f),
+        HeadPose(0f, 0f, 10f),
+        HeadPose(25f, -20f, 8f),
+        HeadPose(-60f, 30f, -25f),
+        HeadPose(75f, 10f, 45f),
+        HeadPose(-5f, -80f, 3f),
+    )
+
+    /**
+     * The allocation-free `rotationMatrix(pose, out)` must produce EXACTLY what the allocating overload
+     * does — including the six non-rotation elements. `out` is pre-filled with sentinel garbage, so if the
+     * overload left any of those stale (the risk that makes a reused render-loop scratch unsafe) the arrays
+     * would differ. This is why the render loop can share one scratch buffer across bones/eyes/arms.
+     */
+    @Test
+    fun rotationMatrixIntoScratch_matchesAllocatingOverload_andFullyOverwritesScratch() {
+        for (pose in scratchPoses) {
+            val scratch = FloatArray(16) { 7f } // garbage in every slot, incl. the 6 non-rotation ones
+            val out = RotationMath.rotationMatrix(pose, scratch)
+            assertTrue(out === scratch, "must return the caller's buffer")
+            assertTrue(
+                out contentEquals RotationMath.rotationMatrix(pose),
+                "diverged from the allocating overload for $pose",
+            )
+        }
+    }
+
+    /** The allocation-free `multiply(a, b, out)` must equal the allocating overload and reject aliasing. */
+    @Test
+    fun multiplyIntoScratch_matchesAllocatingOverload_andRejectsAliasedOut() {
+        for (a in scratchPoses) {
+            for (b in scratchPoses) {
+                val am = RotationMath.rotationMatrix(a)
+                val bm = RotationMath.rotationMatrix(b)
+                val scratch = FloatArray(16) { -3f }
+                val out = RotationMath.multiply(am, bm, scratch)
+                assertTrue(out === scratch, "must return the caller's buffer")
+                assertTrue(out contentEquals RotationMath.multiply(am, bm), "diverged for $a · $b")
+            }
+        }
+        val m = RotationMath.rotationMatrix(HeadPose(20f, 5f, -10f))
+        val other = RotationMath.rotationMatrix(HeadPose.IDENTITY)
+        assertFailsWith<IllegalArgumentException> { RotationMath.multiply(m, other, m) } // out aliases a
+        assertFailsWith<IllegalArgumentException> { RotationMath.multiply(m, other, other) } // out aliases b
+    }
 }

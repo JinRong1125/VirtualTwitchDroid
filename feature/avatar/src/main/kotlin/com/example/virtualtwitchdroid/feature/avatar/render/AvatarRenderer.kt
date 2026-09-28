@@ -127,6 +127,24 @@ class AvatarRenderer {
     private var loadedNanos = 0L // idle motion runs on a load-relative clock (Float-safe, starts exhaled)
     private var springSteps = 0
 
+    // Per-frame scratch for the driven bone / eye / arm / root transforms, so applyRig allocates no
+    // throwaway 4x4 matrices at 30 fps (it is the publish VTuber video source; the CPU is shared with the
+    // encoder, tracker and voice). Main-thread only; each is consumed by tm.setTransform / BoneAim — a
+    // synchronous read — before the next reuse, so sharing them across the bone, eye and arm loops is safe.
+    private val rotScratch = FloatArray(16)
+    private val mulScratch = FloatArray(16)
+    private val rootScratch = FloatArray(16)
+
+    // Reused per-node morph-weight buffers (one per driven morph node), filled in place by
+    // MorphWeights.composeInto each frame instead of allocating a fresh map + arrays. Built at [load].
+    private val morphScratch = HashMap<Int, FloatArray>()
+
+    // Once the model's textures are fully loaded AND every renderable is in the scene, the per-frame
+    // resourceLoader.asyncUpdateLoad() + populateScene() become no-ops — this latches so they stop being
+    // called every frame for the rest of the session (two JNI round-trips per frame otherwise). Re-armed
+    // by [load]/[destroyModel].
+    private var loadFinalized = false
+
     // The single output: exactly one of these is in use.
     private var uiHelper: UiHelper? = null
     private var ownedSurface: Surface? = null // attachSurface(): released by us after the swap chain goes
@@ -229,6 +247,7 @@ class AvatarRenderer {
     /** Loads a VRM: [glb] is the whole file (a **direct** buffer), [model] its parsed VRM semantics. */
     fun load(glb: ByteBuffer, model: VrmModel) {
         lightsAdded = false
+        loadFinalized = false // re-arm the per-frame populate/asyncUpdateLoad until this model finishes loading
         if (released) {
             Log.w(TAG, "load()@${hashCode()} ignored: already released")
             return
@@ -252,6 +271,11 @@ class AvatarRenderer {
         for (node in model.expressions.values.flatten().map { it.node }.toSet()) {
             val entity = model.nodeNames.getOrNull(node)?.let { asset.getFirstEntityByName(it) } ?: 0
             if (entity != 0) morphEntities[node] = entity else Log.w(TAG, "no scene entity for morph node $node")
+        }
+        // Reused morph-weight buffers, one per driven node that has a morph-target count (composeInto fills
+        // these in place each frame; applyRig applies them directly, so no per-frame map/array allocation).
+        for ((node, _) in morphEntities) {
+            model.morphTargetCounts[node]?.let { morphScratch[node] = FloatArray(it) }
         }
         val tm = engine.transformManager
         for (bone in UpperBodyBone.entries) {
@@ -371,6 +395,7 @@ class AvatarRenderer {
         animator = null
         model = null
         morphEntities.clear()
+        morphScratch.clear()
         bones.clear()
         eyeBones.clear()
         lastGaze = EyeLookAt.Gaze.STRAIGHT
@@ -430,11 +455,15 @@ class AvatarRenderer {
     }
 
     /** Adds renderables to the scene as gltfio finishes preparing them (progressive, like ModelViewer). */
-    private fun populateScene(asset: FilamentAsset) {
+
+    /** Returns true when nothing was popped this call (all renderables are already in the scene). */
+    private fun populateScene(asset: FilamentAsset): Boolean {
         val rm = engine.renderableManager
+        var poppedAny = false
         while (true) {
             val count = asset.popRenderables(readyRenderables)
             if (count == 0) break
+            poppedAny = true
             for (i in 0 until count) rm.setScreenSpaceContactShadows(rm.getInstance(readyRenderables[i]), true)
             scene.addEntities(readyRenderables.copyOf(count))
         }
@@ -442,6 +471,7 @@ class AvatarRenderer {
             scene.addEntities(asset.lightEntities)
             lightsAdded = true
         }
+        return !poppedAny
     }
 
     private var lightsAdded = false
@@ -460,8 +490,17 @@ class AvatarRenderer {
             loggedReady = true
             Log.i(TAG, "output ready — first frame")
         }
-        resourceLoader.asyncUpdateLoad() // finalize textures that became ready
-        asset?.let(::populateScene)
+        // Until the model is fully loaded, finalize streamed textures and add renderables as they become
+        // ready. Once textures report complete AND every renderable is in the scene, latch off — otherwise
+        // these are two JNI round-trips per frame for the rest of the session doing nothing.
+        if (!loadFinalized) {
+            resourceLoader.asyncUpdateLoad() // finalize textures that became ready
+            val drained = asset?.let(::populateScene) ?: false
+            if (drained && lightsAdded && resourceLoader.asyncGetLoadProgress() >= 1f) {
+                loadFinalized = true
+                Log.i(TAG, "resource load finalized after $frames frames — pausing per-frame populate")
+            }
+        }
         if (++frames == SCENE_LOG_FRAME) {
             // One-time framing check: how many entities made it into the scene, where the camera is and
             // where the head bone ended up in world space (both should be ~HEAD_HEIGHT_M high, 0.9 m apart).
@@ -553,12 +592,13 @@ class AvatarRenderer {
     private fun applyRig(rig: FaceRig, frameTimeNanos: Long) {
         val model = model ?: return
         val rm = engine.renderableManager
-        val weights = MorphWeights.compose(rig, model)
+        MorphWeights.composeInto(rig, model, morphScratch)
         for ((node, entity) in morphEntities) {
             val instance = rm.getInstance(entity)
             if (instance == 0) continue
-            // A node with no driven weight this frame is reset to zeros so e.g. a blink re-opens.
-            val target = weights[node] ?: model.morphTargetCounts[node]?.let { FloatArray(it) } ?: continue
+            // morphScratch[node] was zeroed then filled by composeInto, so an undriven node applies zeros
+            // (e.g. a released blink re-opens) — same as the old compose()+reset path, without allocating.
+            val target = morphScratch[node] ?: continue
             rm.setMorphWeights(instance, target, 0)
         }
         if (bones.isEmpty()) return
@@ -588,10 +628,10 @@ class AvatarRenderer {
         val tm = engine.transformManager
         rootBase?.let { base ->
             if (rootEntity != 0) {
-                val m = base.copyOf()
-                m[12] += lean.shiftX
-                m[13] += lean.shiftY
-                tm.setTransform(tm.getInstance(rootEntity), m)
+                base.copyInto(rootScratch)
+                rootScratch[12] += lean.shiftX
+                rootScratch[13] += lean.shiftY
+                tm.setTransform(tm.getInstance(rootEntity), rootScratch)
             }
         }
         for ((bone, handle) in bones) {
@@ -600,7 +640,7 @@ class AvatarRenderer {
             val local = if (bone == UpperBodyBone.HEAD) clamp(body[bone]) else body[bone]
             tm.setTransform(
                 tm.getInstance(handle.entity),
-                RotationMath.multiply(handle.rest, RotationMath.rotationMatrix(local)),
+                RotationMath.multiply(handle.rest, RotationMath.rotationMatrix(local, rotScratch), mulScratch),
             )
         }
         animateEyes(rig, model, toModel)
@@ -626,7 +666,7 @@ class AvatarRenderer {
             val pose = toModel(if (eye == Eye.LEFT) gaze.left else gaze.right)
             tm.setTransform(
                 tm.getInstance(handle.entity),
-                RotationMath.multiply(handle.rest, RotationMath.rotationMatrix(pose)),
+                RotationMath.multiply(handle.rest, RotationMath.rotationMatrix(pose, rotScratch), mulScratch),
             )
         }
     }
@@ -652,7 +692,9 @@ class AvatarRenderer {
                 ArmBone.LEFT_LOWER_ARM, ArmBone.RIGHT_LOWER_ARM -> continue // rides along on the upper arm
             }
             // About world +Z, a bone pointing out to +X rises with a positive angle, one pointing to −X with a negative.
-            val worldRotation = RotationMath.rotationMatrix(HeadPose(yaw = 0f, pitch = 0f, roll = outward * liftDeg))
+            // rotScratch is reused (BoneAim.rotateInWorld reads it synchronously and returns a fresh matrix).
+            val worldRotation =
+                RotationMath.rotationMatrix(HeadPose(yaw = 0f, pitch = 0f, roll = outward * liftDeg), rotScratch)
             val base = armBase[bone] ?: handle.rest
             val node = armNodes[bone] ?: continue
             BoneAim.rotateInWorld(transforms, node, base, worldRotation)?.let {

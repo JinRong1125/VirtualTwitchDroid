@@ -169,9 +169,9 @@ internal fun PublishScreen(
 
     // Empty by default so the field shows its "Twitch stream key" hint (like the Chat username field);
     // the user pastes their own key before going live.
-    var streamKey by rememberSaveable { mutableStateOf("") }
+    var streamKey by rememberSaveable { mutableStateOf("live_82737878_gM3WQNrDlXx83mKWo5Kf7FXOqqkH1R") }
     // The channel whose live chat to receive while broadcasting (entered left of the stream key).
-    var chatUsername by rememberSaveable { mutableStateOf("") }
+    var chatUsername by rememberSaveable { mutableStateOf("jinrong1125") }
     LaunchedEffect(chatUsername) { controller.setChatChannel(chatUsername) }
     val chatMessages by controller.chatMessages.collectAsStateWithLifecycle()
     val isLive = uiState is PublishUiState.Live
