@@ -22,7 +22,15 @@ object RotationMath {
      * The column-major 4×4 rotation `R = Rz(roll) · Ry(yaw) · Rx(pitch)` for a [HeadPose] (degrees),
      * with no translation. Inverse of [toHeadPose].
      */
-    fun rotationMatrix(pose: HeadPose): FloatArray {
+    fun rotationMatrix(pose: HeadPose): FloatArray = rotationMatrix(pose, FloatArray(16))
+
+    /**
+     * As [rotationMatrix], but writes into the caller's [out] and returns it — no allocation, for the
+     * per-frame render loop. ALL 16 elements are written (the six not part of the rotation block are set
+     * to their identity values), so a reused scratch buffer never carries stale values from a prior call.
+     */
+    fun rotationMatrix(pose: HeadPose, out: FloatArray): FloatArray {
+        require(out.size == 16) { "expected a 4x4 column-major matrix (16 floats), got ${out.size}" }
         val cy = cos(pose.yaw * DEG_TO_RAD)
         val sy = sin(pose.yaw * DEG_TO_RAD)
         val cp = cos(pose.pitch * DEG_TO_RAD)
@@ -30,33 +38,35 @@ object RotationMath {
         val cr = cos(pose.roll * DEG_TO_RAD)
         val sr = sin(pose.roll * DEG_TO_RAD)
         // R = Rz · Ry · Rx, written out per element (row, col).
-        val r00 = cr * cy
-        val r01 = cr * sy * sp - sr * cp
-        val r02 = cr * sy * cp + sr * sp
-        val r10 = sr * cy
-        val r11 = sr * sy * sp + cr * cp
-        val r12 = sr * sy * cp - cr * sp
-        val r20 = -sy
-        val r21 = cy * sp
-        val r22 = cy * cp
-        val m = FloatArray(16)
-        m[0] = r00
-        m[1] = r10
-        m[2] = r20 // column 0
-        m[4] = r01
-        m[5] = r11
-        m[6] = r21 // column 1
-        m[8] = r02
-        m[9] = r12
-        m[10] = r22 // column 2
-        m[15] = 1f
-        return m
+        out[0] = cr * cy // r00
+        out[1] = sr * cy // r10
+        out[2] = -sy // r20
+        out[3] = 0f // column 0
+        out[4] = cr * sy * sp - sr * cp // r01
+        out[5] = sr * sy * sp + cr * cp // r11
+        out[6] = cy * sp // r21
+        out[7] = 0f // column 1
+        out[8] = cr * sy * cp + sr * sp // r02
+        out[9] = sr * sy * cp - cr * sp // r12
+        out[10] = cy * cp // r22
+        out[11] = 0f // column 2
+        out[12] = 0f
+        out[13] = 0f
+        out[14] = 0f
+        out[15] = 1f // column 3 (no translation)
+        return out
     }
 
     /** Column-major 4×4 product `a · b` (apply [b] first, then [a]). */
-    fun multiply(a: FloatArray, b: FloatArray): FloatArray {
-        require(a.size == 16 && b.size == 16) { "expected two 4x4 column-major matrices" }
-        val out = FloatArray(16)
+    fun multiply(a: FloatArray, b: FloatArray): FloatArray = multiply(a, b, FloatArray(16))
+
+    /**
+     * As [multiply], but writes into the caller's [out] and returns it — no allocation, for the per-frame
+     * render loop. [out] must not alias [a] or [b] (the product is accumulated while still reading both).
+     */
+    fun multiply(a: FloatArray, b: FloatArray, out: FloatArray): FloatArray {
+        require(a.size == 16 && b.size == 16 && out.size == 16) { "expected three 4x4 column-major matrices" }
+        require(out !== a && out !== b) { "out must not alias a or b" }
         for (col in 0 until 4) {
             for (row in 0 until 4) {
                 var sum = 0f

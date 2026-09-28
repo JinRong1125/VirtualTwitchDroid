@@ -32,4 +32,27 @@ object MorphWeights {
         }
         return out
     }
+
+    /**
+     * Like [compose] but fills caller-owned buffers in [out] in place — no per-frame allocation, for the
+     * render loop. Every buffer in [out] is zeroed first, so a node not driven this frame ends up all
+     * zeros (e.g. a released blink re-opens) — matching `compose(rig, model)[node] ?: zeros`. [out] must
+     * hold a correctly-sized buffer for every node that carries morph weights this frame (a bind whose
+     * node is absent from [out] is skipped, exactly as [compose] skips a node without a morph-target
+     * count). The result for every present node is identical to the [compose]+reset path.
+     */
+    fun composeInto(rig: FaceRig, model: VrmModel, out: Map<Int, FloatArray>) {
+        for (arr in out.values) arr.fill(0f)
+        val boneGaze = model.lookAt?.type == LookAtType.BONE
+        for ((expression, binds) in model.expressions) {
+            if (boneGaze && expression in gaze) continue
+            val w = rig[expression]
+            if (w <= 0f) continue
+            for (bind in binds) {
+                val arr = out[bind.node] ?: continue
+                if (bind.index !in arr.indices) continue
+                arr[bind.index] = (arr[bind.index] + w * bind.weight).coerceIn(0f, 1f)
+            }
+        }
+    }
 }
